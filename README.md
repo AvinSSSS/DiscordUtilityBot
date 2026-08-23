@@ -12,8 +12,11 @@ Bot enxuto para comunidades que precisam receber novos membros e organizar supor
 - Prevenção de mais de um ticket aberto por usuário.
 - Permissões exclusivas para autor e equipe de suporte.
 - Comando `/fechar` com autorização e transcript das últimas 100 mensagens.
-- Endpoints `/` e `/health` para hospedagem e monitoramento.
-- Imagem Docker pronta para implantação.
+- Arquivamento do transcript em canal privado ou, como fallback, por DM ao autor.
+- Bloqueio de fechamento concorrente e recuperação quando o arquivamento falha.
+- Endpoints `/`, `/health` e `/ready` para hospedagem e monitoramento.
+- Validação das variáveis antes da conexão, desligamento gracioso e imagem Docker com healthcheck.
+- Testes automatizados e CI no GitHub Actions.
 
 ## 🛠️ Configuração
 
@@ -34,6 +37,7 @@ Preencha no `.env`:
 | `WELCOME_CHANNEL_ID` | Canal das boas-vindas |
 | `TICKET_CATEGORY_ID` | Categoria dos tickets |
 | `SUPPORT_ROLE_ID` | Cargo autorizado a atender/fechar |
+| `TRANSCRIPT_CHANNEL_ID` | Canal privado que arquiva os transcripts (recomendado) |
 | `PORT` | Porta HTTP, padrão `8000` |
 
 ```bash
@@ -47,7 +51,14 @@ npm start
 npm test
 ```
 
-Os testes não precisam de token e validam funções puras, como a criação segura de nomes de canal.
+Os testes não precisam de token e validam configuração, nomes seguros, autorização,
+estado do ticket, ordenação das mensagens e anexos do transcript.
+
+```bash
+npm run check
+```
+
+O workflow `.github/workflows/ci.yml` executa as duas verificações em pushes e pull requests.
 
 ## 🐳 Docker e Koyeb
 
@@ -56,14 +67,27 @@ docker build -t discord-utility-bot .
 docker run --env-file .env -p 8000:8000 discord-utility-bot
 ```
 
-No Koyeb, publique o `Dockerfile`, exponha a porta 8000 e cadastre as variáveis como secrets. Planos gratuitos podem suspender o serviço por inatividade.
+No Koyeb, publique o `Dockerfile`, exponha a porta 8000, use `/health` no
+healthcheck e cadastre as variáveis como secrets. Planos gratuitos podem
+suspender o serviço por inatividade.
+
+## ✅ Checklist do Discord
+
+1. Ative **Server Members Intent** e **Message Content Intent** na página **Bot**.
+2. Convide o bot com os escopos `bot` e `applications.commands`.
+3. Conceda `View Channels`, `Send Messages`, `Read Message History`, `Attach Files`
+   e `Manage Channels` somente nas categorias necessárias.
+4. Crie um canal privado de auditoria e configure `TRANSCRIPT_CHANNEL_ID`.
+5. Rode `npm run register` uma vez após criar ou alterar os slash commands.
 
 ## 🔐 Segurança e limitações
 
 - Nunca versione o `.env` ou o token do Discord.
 - Conceda ao bot somente as permissões necessárias.
-- O transcript é anexado antes da exclusão do canal e não usa banco externo.
+- O transcript é salvo no canal configurado; sem ele, o bot tenta enviá-lo por DM
+  ao autor e mantém o ticket aberto se não conseguir preservar o histórico.
 - O MVP exporta no máximo 100 mensagens por limitação intencional da consulta.
+- O armazenamento e a retenção dos transcripts seguem as permissões e políticas do seu servidor.
 
 ---
 
