@@ -5,7 +5,7 @@
 
 Bot enxuto para comunidades que precisam receber novos membros e organizar suporte por tickets sem painéis complexos.
 
-Termos de Serviço: [GitHub Pages](https://avinssss.github.io/DiscordUtilityBot/).
+Documentos legais: [Termos de Serviço](https://avinssss.github.io/DiscordUtilityBot/) e [Política de Privacidade](https://avinssss.github.io/DiscordUtilityBot/privacy.html).
 
 ## ✨ Funcionalidades
 
