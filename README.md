@@ -86,6 +86,22 @@ suspender o serviço por inatividade.
 4. Crie um canal privado de auditoria e configure `TRANSCRIPT_CHANNEL_ID`.
 5. Rode `npm run register` uma vez após criar ou alterar os slash commands.
 
+## 📚 Links para aprender
+
+Estes materiais ajudam a entender as partes usadas na criação e manutenção do Avin:
+
+- [Visão geral das aplicações Discord](https://docs.discord.com/developers/quick-start/overview-of-apps) — explica aplicações, bots e as APIs HTTP e Gateway.
+- [Tutorial oficial: criando seu primeiro bot](https://docs.discord.com/developers/quick-start/getting-started) — acompanha desde a aplicação até comandos e interações.
+- [Discord Developer Portal](https://discord.com/developers/applications) — local para criar a aplicação, obter IDs, administrar o token e configurar intents.
+- [Bots e aplicações complementares](https://docs.discord.com/developers/platform/bots) — apresenta formas de conexão e casos de uso de bots.
+- [Gateway e intents](https://docs.discord.com/developers/events/gateway) — explica eventos em tempo real e intents privilegiados.
+- [Slash commands](https://docs.discord.com/developers/interactions/application-commands) — referência dos comandos e de suas opções.
+- [Botões, menus e formulários](https://docs.discord.com/developers/platform/components) — documentação dos componentes interativos e modais.
+- [OAuth2 e permissões](https://docs.discord.com/developers/platform/oauth2-and-permissions) — explica convites, escopos, token e permissões do bot.
+- [Guia do discord.js](https://discordjs.guide/) — exemplos práticos usando a biblioteca adotada neste projeto.
+- [Referência do discord.js 14](https://discord.js.org/docs/packages/discord.js/14.21.0) — classes, métodos e tipos disponíveis na versão usada pelo Avin.
+- [Introdução ao Node.js](https://nodejs.org/en/learn/getting-started/introduction-to-nodejs) — fundamentos do ambiente que executa o bot.
+
 ## 🔐 Segurança e limitações
 
 - Nunca versione o `.env` ou o token do Discord.
