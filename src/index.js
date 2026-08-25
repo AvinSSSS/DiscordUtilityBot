@@ -15,6 +15,8 @@ import { canCloseTicket, ticketData, ticketTopic } from './ticket.js';
 import { renderTranscript, safeName } from './transcript.js';
 
 const config = botConfig();
+
+// Intents determinam quais eventos e conteúdos o Discord envia ao processo do bot.
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -24,6 +26,7 @@ const client = new Client({
   ],
 });
 
+// Servidor HTTP pequeno para healthchecks da hospedagem; ele não recebe comandos.
 const app = express();
 app.disable('x-powered-by');
 app.get('/', (_request, response) => response.json({
@@ -43,6 +46,7 @@ client.once(Events.ClientReady, (readyClient) => {
 
 client.on(Events.Error, (error) => console.error('Erro do cliente Discord:', error));
 
+// Disparado automaticamente quando uma pessoa entra no servidor.
 client.on(Events.GuildMemberAdd, async (member) => {
   if (!config.welcomeChannelId) return;
   try {
@@ -58,6 +62,7 @@ client.on(Events.GuildMemberAdd, async (member) => {
   }
 });
 
+/** Cria um canal privado e impede que o mesmo usuário mantenha dois tickets. */
 async function createTicket(interaction) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   await interaction.guild.channels.fetch();
@@ -65,6 +70,7 @@ async function createTicket(interaction) {
     ticketData(channel.topic)?.ownerId === interaction.user.id);
   if (existing) return interaction.editReply(`Você já tem um ticket aberto: ${existing}`);
 
+  // @everyone perde acesso; autor e equipe recebem apenas as permissões necessárias.
   const permissionOverwrites = [
     { id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
     {
@@ -104,6 +110,7 @@ async function createTicket(interaction) {
   return interaction.editReply(`Ticket criado: ${channel}`);
 }
 
+/** Publica a sugestão como embed e adiciona as duas opções de voto. */
 async function createSuggestion(interaction) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const text = interaction.options.getString('texto', true).trim();
@@ -141,6 +148,10 @@ async function createSuggestion(interaction) {
   return interaction.editReply(`Sugestão publicada ${destination}: ${message.url}.${warning}`);
 }
 
+/**
+ * Salva o transcript no canal de auditoria ou, como alternativa, envia por DM.
+ * A função só retorna depois que uma cópia do histórico foi preservada.
+ */
 async function saveTranscript(ownerId, channelName, content) {
   const fileName = `${channelName}.txt`;
   const attachment = () => new AttachmentBuilder(Buffer.from(content, 'utf8'), { name: fileName });
@@ -168,6 +179,7 @@ async function saveTranscript(ownerId, channelName, content) {
   return 'mensagem direta do autor';
 }
 
+/** Valida a autorização, preserva o histórico e agenda a exclusão do ticket. */
 async function closeTicket(interaction) {
   const data = ticketData(interaction.channel?.topic);
   if (!interaction.channel?.isTextBased() || !data) {
@@ -192,6 +204,7 @@ async function closeTicket(interaction) {
   }
 
   await interaction.deferReply();
+  // O estado "closing" evita dois fechamentos simultâneos do mesmo canal.
   await interaction.channel.setTopic(ticketTopic(data.ownerId, 'closing'), 'Ticket em encerramento');
   try {
     const fetched = await interaction.channel.messages.fetch({ limit: 100 });
@@ -206,6 +219,7 @@ async function closeTicket(interaction) {
   }
 }
 
+// Roteador central dos slash commands recebidos pelo Gateway do Discord.
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand() || !interaction.guild) return;
   try {
@@ -223,6 +237,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
+/** Encerra Discord e HTTP de modo previsível durante deploys ou Ctrl+C. */
 async function shutdown(signal) {
   console.log(`${signal} recebido; encerrando conexões.`);
   client.destroy();

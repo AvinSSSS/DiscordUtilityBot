@@ -7,6 +7,8 @@ Bot enxuto para comunidades que precisam receber novos membros e organizar supor
 
 Documentos legais: [Termos de Serviço](https://avinssss.github.io/DiscordUtilityBot/) e [Política de Privacidade](https://avinssss.github.io/DiscordUtilityBot/privacy.html).
 
+Documentação técnica: [arquitetura e guia do código](DOCUMENTATION.md).
+
 ## ✨ Funcionalidades
 
 - Mensagem de boas-vindas em canal configurável.
@@ -79,7 +81,7 @@ suspender o serviço por inatividade.
 
 1. Ative **Server Members Intent** e **Message Content Intent** na página **Bot**.
 2. Convide o bot com os escopos `bot` e `applications.commands`.
-3. Conceda `View Channels`, `Send Messages`, `Read Message History`, `Attach Files`
+3. Conceda `View Channels`, `Send Messages`, `Read Message History`, `Attach Files`,
    `Add Reactions` e `Manage Channels` somente nos canais e categorias necessários.
 4. Crie um canal privado de auditoria e configure `TRANSCRIPT_CHANNEL_ID`.
 5. Rode `npm run register` uma vez após criar ou alterar os slash commands.
