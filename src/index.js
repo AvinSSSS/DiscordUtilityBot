@@ -4,8 +4,10 @@ import {
   AttachmentBuilder,
   ChannelType,
   Client,
+  EmbedBuilder,
   Events,
   GatewayIntentBits,
+  MessageFlags,
   PermissionFlagsBits,
 } from 'discord.js';
 import { botConfig } from './config.js';
@@ -57,7 +59,7 @@ client.on(Events.GuildMemberAdd, async (member) => {
 });
 
 async function createTicket(interaction) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   await interaction.guild.channels.fetch();
   const existing = interaction.guild.channels.cache.find((channel) =>
     ticketData(channel.topic)?.ownerId === interaction.user.id);
@@ -102,6 +104,43 @@ async function createTicket(interaction) {
   return interaction.editReply(`Ticket criado: ${channel}`);
 }
 
+async function createSuggestion(interaction) {
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  const text = interaction.options.getString('texto', true).trim();
+  const channel = config.suggestionChannelId
+    ? await interaction.guild.channels.fetch(config.suggestionChannelId)
+    : interaction.channel;
+
+  if (!channel?.isTextBased() || !('send' in channel)) {
+    return interaction.editReply('O canal de sugestões configurado não aceita mensagens.');
+  }
+
+  const embed = new EmbedBuilder()
+    .setColor(0x5865f2)
+    .setTitle('💡 Nova sugestão')
+    .setDescription(text)
+    .setAuthor({
+      name: interaction.user.displayName,
+      iconURL: interaction.user.displayAvatarURL(),
+    })
+    .setFooter({ text: `Sugestão de ${interaction.user.tag} · ID ${interaction.user.id}` })
+    .setTimestamp();
+
+  const message = await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
+  let votingReady = true;
+  try {
+    await message.react('👍');
+    await message.react('👎');
+  } catch (error) {
+    votingReady = false;
+    console.error('Sugestão publicada, mas não foi possível adicionar as reações:', error);
+  }
+
+  const destination = channel.id === interaction.channelId ? 'neste canal' : `${channel}`;
+  const warning = votingReady ? '' : ' Não consegui adicionar as reações; confira a permissão **Adicionar reações**.';
+  return interaction.editReply(`Sugestão publicada ${destination}: ${message.url}.${warning}`);
+}
+
 async function saveTranscript(ownerId, channelName, content) {
   const fileName = `${channelName}.txt`;
   const attachment = () => new AttachmentBuilder(Buffer.from(content, 'utf8'), { name: fileName });
@@ -132,10 +171,10 @@ async function saveTranscript(ownerId, channelName, content) {
 async function closeTicket(interaction) {
   const data = ticketData(interaction.channel?.topic);
   if (!interaction.channel?.isTextBased() || !data) {
-    return interaction.reply({ content: 'Este comando só funciona em tickets.', ephemeral: true });
+    return interaction.reply({ content: 'Este comando só funciona em tickets.', flags: MessageFlags.Ephemeral });
   }
   if (data.status === 'closing') {
-    return interaction.reply({ content: 'Este ticket já está sendo encerrado.', ephemeral: true });
+    return interaction.reply({ content: 'Este ticket já está sendo encerrado.', flags: MessageFlags.Ephemeral });
   }
   const memberRoleIds = interaction.member && 'roles' in interaction.member
     ? interaction.member.roles.cache
@@ -148,7 +187,7 @@ async function closeTicket(interaction) {
   })) {
     return interaction.reply({
       content: 'Somente o autor ou a equipe pode fechar este ticket.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -172,13 +211,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
   try {
     if (interaction.commandName === 'ticket') await createTicket(interaction);
     if (interaction.commandName === 'fechar') await closeTicket(interaction);
+    if (interaction.commandName === 'sugerir') await createSuggestion(interaction);
   } catch (error) {
     console.error(`Falha no comando /${interaction.commandName}:`, error);
     const message = 'Não foi possível concluir o comando. Confira minhas permissões e tente novamente.';
     if (interaction.deferred || interaction.replied) {
       await interaction.editReply(message).catch(() => {});
     } else {
-      await interaction.reply({ content: message, ephemeral: true }).catch(() => {});
+      await interaction.reply({ content: message, flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 });

@@ -10,6 +10,7 @@ Documentos legais: [Termos de Serviço](https://avinssss.github.io/DiscordUtilit
 ## ✨ Funcionalidades
 
 - Mensagem de boas-vindas em canal configurável.
+- Comando `/sugerir` para publicar sugestões com votação por 👍/👎.
 - Comando `/ticket` para criar um canal privado.
 - Prevenção de mais de um ticket aberto por usuário.
 - Permissões exclusivas para autor e equipe de suporte.
@@ -40,6 +41,7 @@ Preencha no `.env`:
 | `TICKET_CATEGORY_ID` | Categoria dos tickets |
 | `SUPPORT_ROLE_ID` | Cargo autorizado a atender/fechar |
 | `TRANSCRIPT_CHANNEL_ID` | Canal privado que arquiva os transcripts (recomendado) |
+| `SUGGESTION_CHANNEL_ID` | Canal que recebe sugestões; vazio usa o canal do comando |
 | `PORT` | Porta HTTP, padrão `8000` |
 
 ```bash
@@ -78,7 +80,7 @@ suspender o serviço por inatividade.
 1. Ative **Server Members Intent** e **Message Content Intent** na página **Bot**.
 2. Convide o bot com os escopos `bot` e `applications.commands`.
 3. Conceda `View Channels`, `Send Messages`, `Read Message History`, `Attach Files`
-   e `Manage Channels` somente nas categorias necessárias.
+   `Add Reactions` e `Manage Channels` somente nos canais e categorias necessários.
 4. Crie um canal privado de auditoria e configure `TRANSCRIPT_CHANNEL_ID`.
 5. Rode `npm run register` uma vez após criar ou alterar os slash commands.
 

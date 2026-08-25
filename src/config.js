@@ -27,6 +27,7 @@ export function botConfig(env = process.env) {
     ticketCategoryId: optionalSnowflake(env, 'TICKET_CATEGORY_ID'),
     supportRoleId: optionalSnowflake(env, 'SUPPORT_ROLE_ID'),
     transcriptChannelId: optionalSnowflake(env, 'TRANSCRIPT_CHANNEL_ID'),
+    suggestionChannelId: optionalSnowflake(env, 'SUGGESTION_CHANNEL_ID'),
     port: port(env),
   });
 }
