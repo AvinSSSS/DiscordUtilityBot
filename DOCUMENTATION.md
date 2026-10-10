@@ -105,9 +105,35 @@ O evento `GuildMemberAdd` envia uma mensagem ao canal definido por `WELCOME_CHAN
 
 ## Validação local
 
+Execute os comandos na raiz do repositório (diretório que contém `package.json` e `package-lock.json`), usando Node.js 22+ e npm. Em uma worktree nova, instale as dependências do lockfile:
+
 ```bash
+npm ci
 npm run check
 npm test
 ```
 
-`npm run check` valida a sintaxe dos arquivos. `npm test` executa os testes com o test runner nativo do Node.js.
+`npm ci` precisa de acesso ao registro npm ou de um cache que contenha as dependências. Depois da instalação, as duas verificações são locais e não precisam de `.env`, token real ou conexão com o Discord.
+
+`npm run check` verifica a sintaxe dos cinco arquivos em `src/`; não inicia o bot. `npm test` executa os testes com o test runner nativo do Node.js:
+
+| Arquivo | Dados sintéticos e cobertura |
+|---|---|
+| `test/config.test.js` | Token fictício `secret`, IDs numéricos de exemplo e portas válidas/inválidas; verifica padrões, IDs opcionais e campos obrigatórios do registro |
+| `test/ticket.test.js` | IDs fictícios e conjuntos de cargos; verifica leitura/escrita do tópico e a função de autorização |
+| `test/transcript.test.js` | Mensagens em `Map`, datas fixas e URL fictícia `https://cdn.example/imagem.png`; verifica nomes de canal, ordem do texto e inclusão da URL do anexo |
+
+Esses testes importam apenas `src/config.js`, `src/ticket.js` e `src/transcript.js`. Não executam `src/index.js` ou `src/register-commands.js`, não baixam anexos e não verificam criação/exclusão de canais, fechamento concorrente, envio de transcripts, endpoints HTTP, Docker ou hospedagem. Passar nessas verificações não comprova esses fluxos integrados.
+
+### Configuração por script
+
+A lista de variáveis está em [.env.example](.env.example) e no [README](README.md); a leitura efetiva está em [src/config.js](src/config.js).
+
+| Script | Variáveis lidas |
+|---|---|
+| `npm start` (`botConfig`) | Exige `DISCORD_TOKEN`; aceita `WELCOME_CHANNEL_ID`, `TICKET_CATEGORY_ID`, `SUPPORT_ROLE_ID`, `TRANSCRIPT_CHANNEL_ID` e `SUGGESTION_CHANNEL_ID` vazios; usa `PORT=8000` quando não informado |
+| `npm run register` (`registrationConfig`) | Exige `DISCORD_TOKEN`, `DISCORD_CLIENT_ID` e `DISCORD_GUILD_ID`; não lê `PORT` ou os IDs opcionais do bot |
+
+IDs preenchidos devem conter de 17 a 20 dígitos; `PORT` deve ser um inteiro de 1 a 65535. A validação local verifica o formato, não a existência dos canais/cargos ou a autenticidade do token. Os valores sintéticos dos testes servem apenas para funções isoladas.
+
+`npm start` conecta ao Discord e abre o servidor HTTP; `npm run register` faz uma requisição de escrita para atualizar os comandos do servidor configurado. Eles não fazem parte das verificações offline acima.
