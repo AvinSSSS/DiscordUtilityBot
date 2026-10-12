@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "register": "node src/register-commands.js",
-    "check": "node --check src/index.js && node --check src/register-commands.js && node --check src/config.js && node --check src/ticket.js && node --check src/transcript.js",
+    "check": "node --check src/index.js && node --check src/create-ticket.js && node --check src/register-commands.js && node --check src/config.js && node --check src/ticket.js && node --check src/transcript.js",
     "test": "node --test"
   },
   "engines": { "node": ">=22" },
