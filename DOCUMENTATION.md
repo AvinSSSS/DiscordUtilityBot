@@ -20,6 +20,7 @@ Hospedagem ──HTTP──> /health e /ready
 
 | Caminho | Responsabilidade |
 |---|---|
+| `src/create-ticket.js` | Abertura de tickets e reserva por servidor/autor |
 | `src/index.js` | Inicialização, eventos do Discord e implementação dos comandos |
 | `src/register-commands.js` | Definição e registro dos slash commands no servidor |
 | `src/config.js` | Leitura e validação das variáveis de ambiente |
@@ -51,6 +52,8 @@ O registro por servidor foi escolhido porque as alterações aparecem rapidament
 ### Abertura
 
 `/ticket` adia a resposta de forma privada, atualiza o cache de canais e procura outro ticket pertencente ao usuário. Se não existir, cria um canal de texto privado.
+
+A abertura reserva o par servidor/autor antes da primeira espera assíncrona. Uma solicitação simultânea recebe uma resposta privada para aguardar e tentar novamente, sem criar outro canal. A reserva é liberada ao concluir ou falhar; a próxima tentativa consulta novamente os tópicos dos canais. Usuários e servidores diferentes continuam independentes. Essa garantia vale para um único processo; múltiplas réplicas exigem coordenação compartilhada.
 
 O tópico do canal armazena:
 

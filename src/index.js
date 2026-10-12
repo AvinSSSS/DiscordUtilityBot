@@ -2,17 +2,16 @@ import 'dotenv/config';
 import express from 'express';
 import {
   AttachmentBuilder,
-  ChannelType,
   Client,
   EmbedBuilder,
   Events,
   GatewayIntentBits,
   MessageFlags,
-  PermissionFlagsBits,
 } from 'discord.js';
 import { botConfig } from './config.js';
 import { canCloseTicket, ticketData, ticketTopic } from './ticket.js';
-import { renderTranscript, safeName } from './transcript.js';
+import { renderTranscript } from './transcript.js';
+import { createTicket } from './create-ticket.js';
 
 const config = botConfig();
 
@@ -61,54 +60,6 @@ client.on(Events.GuildMemberAdd, async (member) => {
     console.error('Não foi possível enviar a mensagem de boas-vindas:', error);
   }
 });
-
-/** Cria um canal privado e impede que o mesmo usuário mantenha dois tickets. */
-async function createTicket(interaction) {
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  await interaction.guild.channels.fetch();
-  const existing = interaction.guild.channels.cache.find((channel) =>
-    ticketData(channel.topic)?.ownerId === interaction.user.id);
-  if (existing) return interaction.editReply(`Você já tem um ticket aberto: ${existing}`);
-
-  // @everyone perde acesso; autor e equipe recebem apenas as permissões necessárias.
-  const permissionOverwrites = [
-    { id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
-    {
-      id: interaction.user.id,
-      allow: [
-        PermissionFlagsBits.ViewChannel,
-        PermissionFlagsBits.SendMessages,
-        PermissionFlagsBits.ReadMessageHistory,
-        PermissionFlagsBits.AttachFiles,
-      ],
-    },
-  ];
-  if (config.supportRoleId) {
-    permissionOverwrites.push({
-      id: config.supportRoleId,
-      allow: [
-        PermissionFlagsBits.ViewChannel,
-        PermissionFlagsBits.SendMessages,
-        PermissionFlagsBits.ReadMessageHistory,
-        PermissionFlagsBits.AttachFiles,
-      ],
-    });
-  }
-
-  const channel = await interaction.guild.channels.create({
-    name: `ticket-${safeName(interaction.user.username)}`,
-    type: ChannelType.GuildText,
-    parent: config.ticketCategoryId || undefined,
-    topic: ticketTopic(interaction.user.id),
-    permissionOverwrites,
-    reason: `Ticket aberto por ${interaction.user.tag}`,
-  });
-  await channel.send({
-    content: `${interaction.user}, descreva sua necessidade. Use /fechar quando terminar.`,
-    allowedMentions: { users: [interaction.user.id] },
-  });
-  return interaction.editReply(`Ticket criado: ${channel}`);
-}
 
 /** Publica a sugestão como embed e adiciona as duas opções de voto. */
 async function createSuggestion(interaction) {
@@ -223,7 +174,7 @@ async function closeTicket(interaction) {
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand() || !interaction.guild) return;
   try {
-    if (interaction.commandName === 'ticket') await createTicket(interaction);
+    if (interaction.commandName === 'ticket') await createTicket(interaction, config);
     if (interaction.commandName === 'fechar') await closeTicket(interaction);
     if (interaction.commandName === 'sugerir') await createSuggestion(interaction);
   } catch (error) {
